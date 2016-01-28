@@ -5,29 +5,19 @@
  */
 package javafxapplication3;
 
-import com.sun.javafx.geom.BaseBounds;
-import com.sun.javafx.geom.transform.BaseTransform;
-import com.sun.javafx.jmx.MXNodeAlgorithm;
-import com.sun.javafx.jmx.MXNodeAlgorithmContext;
-import com.sun.javafx.sg.prism.NGNode;
-import static java.awt.Color.black;
 import java.io.IOException;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.text.Font;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class JavaFXApplication3 extends Application {
@@ -48,25 +38,27 @@ public class JavaFXApplication3 extends Application {
             return this.value;
         }
     }
-    final int LENGTH_X = 3;
-    final int LENGTH_Y = 3;
-    public Case[][] Gmap = new Case[LENGTH_X][LENGTH_Y];
+    final int LENGTH_X = 22; //row
+    final int LENGTH_Y = 14; //column
+    final int MAX_PIXEL = 50;
+    final int MIN_PIXEL = 50;
+    final int PREF_PIXEL = 50;
+    public Case[][] Gmap = new Case[LENGTH_Y][LENGTH_X];
 
     @Override
     public void start(Stage primaryStage) throws IOException {
         //Pane myPane = (Pane) FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
         Group root = new Group();
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1200, 800);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Pacman map test");
-
-        initMapArray();
-        //   myPane.getChildren().add(getGrid());
-        //   GridPane myPane = getGrid();   
+        initMapArray(); 
         GridPane grid = getGrid();
-
-        scene.setRoot(grid);
-        root.getChildren().add(grid);
+        StackPane st = new StackPane();
+        st.getChildren().add(grid);
+        scene.setRoot(st);
+        scene.setFill(Color.BLACK);
+        root.getChildren().add(st);
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -109,34 +101,52 @@ public class JavaFXApplication3 extends Application {
 
     private GridPane getGrid() {
         GridPane grid = new GridPane();
-        grid.setPadding(new Insets(10, 10, 10, 10));
-        grid.setVgap(3);
-        grid.setHgap(3);
-
-        final Image jelly = new Image(getClass().getResourceAsStream("Jellyfish.jpg"));
-        final ImageView jell = new ImageView();
-        jell.setImage(jelly);
-
+        grid.setVgap(0);
+        grid.setHgap(0);
+        grid.setGridLinesVisible(true);
         //Pane wall = new Pane();
         //wall.setStyle("-fx-background-color: blue");
-        Pane pictureRegion = new Pane();
-        pictureRegion.getChildren().add(jell);
-        for (int i = 0; i < LENGTH_X; i++) {        
-                RowConstraints con = new RowConstraints();
-                con.setPrefHeight(20);
-                grid.getRowConstraints().add(con);
-            }
+
+        for (int i = 0; i < LENGTH_X; i++) {
+            RowConstraints con = new RowConstraints();
+            con.setMaxHeight(MAX_PIXEL);
+            con.setMinHeight(MIN_PIXEL);
+            con.setPrefHeight(PREF_PIXEL);
+            grid.getRowConstraints().add(con);
+        }
         for (int x = 0; x < LENGTH_Y; x++) {
             ColumnConstraints col = new ColumnConstraints();
-            col.setPrefWidth(20);
+            col.setMaxWidth(MAX_PIXEL);
+            col.setMinWidth(MIN_PIXEL);
+            col.setPrefWidth(PREF_PIXEL);
             grid.getColumnConstraints().add(col);
         }
-        for (int i = 0; i < getNbRow(grid); i++) {
-            for (int x = 0; x < getNbCol(grid); x++) {
-                if (Gmap[i][x].getValue() == 1) {
+        for (int i = 0; i < getNbCol(grid); i++) {
+            for (int x = 0; x < getNbRow(grid); x++) {
+                // Possibilité methode pour éviter duplication
+                if (Gmap[i][x].getValue() == 0) {
+                    final Image koala = new Image(getClass().getResourceAsStream("Koala.jpg"));
+                    final ImageView koal = new ImageView();
+                    koal.setImage(koala);
+                    Pane pictureRegion = new Pane();
+                    koal.fitWidthProperty().bind(pictureRegion.widthProperty());
+                    koal.fitHeightProperty().bind(pictureRegion.heightProperty());
+                    pictureRegion.getChildren().add(koal);                 
                     grid.setConstraints(pictureRegion, i, x);
-                    grid.getChildren().add(pictureRegion);
-                   
+                    grid.add(pictureRegion, i, x);
+                }
+                
+                if (Gmap[i][x].getValue() == 1) {
+                    final Image jelly = new Image(getClass().getResourceAsStream("Jellyfish.jpg"));
+                    final ImageView jell = new ImageView();
+                    jell.setImage(jelly);
+                    Pane pictureRegion = new Pane();
+                    jell.fitWidthProperty().bind(pictureRegion.widthProperty());
+                    jell.fitHeightProperty().bind(pictureRegion.heightProperty());
+                    pictureRegion.getChildren().add(jell);
+                    grid.setConstraints(pictureRegion, i, x);
+                    grid.add(pictureRegion, i, x);
+
                 }
             }
         }
@@ -144,8 +154,8 @@ public class JavaFXApplication3 extends Application {
     }
 
     private void initMapArray() {
-        for (int i = 0; i < LENGTH_X; i++) {
-            for (int x = 0; x < LENGTH_Y; x++) {
+        for (int i = 0; i < LENGTH_Y; i++) {
+            for (int x = 0; x < LENGTH_X; x++) {
                 Gmap[i][x] = new Case((int) (Math.random() * 2));
             }
         }
